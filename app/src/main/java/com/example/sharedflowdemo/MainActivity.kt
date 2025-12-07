@@ -12,8 +12,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -52,11 +55,33 @@ fun MainScreen(
 ) {
     val collectedValues by viewModel.collectedValues.collectAsStateWithLifecycle()
 
+    // Используем правильный тип Int, так как sharedFlow испускает целые числа
+    val messages = remember { mutableStateListOf<Int>() }
+
+    // Запускаем сбор значений из sharedFlow
+    LaunchedEffect(key1 = Unit) {
+        viewModel.sharedFlow.collect {
+            println("Collecting $it")
+            messages.add(it)
+        }
+    }
+
     LazyColumn(modifier = modifier) {
+        // Отображаем значения из StateFlow
         items(collectedValues) { message ->
             Text(
-                text = "Collected Value = $message",
+                text = "StateFlow Value = $message",
                 style = MaterialTheme.typography.headlineLarge,
+                modifier = Modifier.padding(5.dp)
+            )
+        }
+
+        // Отображаем значения из SharedFlow
+        items(messages) { message ->
+            Text(
+                text = "SharedFlow Value = $message",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.padding(5.dp)
             )
         }
